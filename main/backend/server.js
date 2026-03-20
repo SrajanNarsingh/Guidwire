@@ -674,12 +674,15 @@ app.post('/api/premium/calculate', (req, res) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
+const ENV = process.env.NODE_ENV || "development";
+
+// ─── Start Server ─────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════════╗
   ║   GigShield API Server Running!            ║
-  ║   Port: ${PORT}                              ║
-  ║   Environment: Development                 ║
+  ║   Port: ${PORT}                           
+  ║   Environment: ${ENV}                 
   ╚════════════════════════════════════════════╝
   `);
 });
