@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GigShield — AI Insurance for Gig Workers</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+/* ── Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --bg: #050A0F;
+  --surface: #0C1520;
+  --surface2: #111E2D;
+  --surface3: #162436;
+  --border: rgba(0,200,150,0.12);
+  --border-bright: rgba(0,200,150,0.35);
+  --accent: #00C896;
+  --accent2: #0FF5CB;
+  --accent-dim: rgba(0,200,150,0.08);
+  --danger: #FF4C6A;
+  --warning: #FFB800;
+  --info: #3B9EFF;
+  --text: #E8F4F0;
+  --text-muted: #7A9E91;
+  --text-dim: #3D5E52;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --glow: 0 0 40px rgba(0,200,150,0.15);
+  --glow-strong: 0 0 60px rgba(0,200,150,0.25);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,150,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,150,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+/* ── Typography ────────────────────────────────────────────────── */
+h1,h2,h3,h4,h5 { font-family: var(--font-head); font-weight: 700; line-height: 1.2; }
+a { color: var(--accent); text-decoration: none; }
+
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes glow-pulse { 0%,100%{box-shadow:0 0 20px rgba(0,200,150,0.2)} 50%{box-shadow:0 0 50px rgba(0,200,150,0.4)} }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:none;opacity:1} }
+@keyframes counter { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+.fade-in { animation: fadeIn 0.5s ease forwards; }
+
+/* ── Layout ─────────────────────────────────────────────────────── */
+.app-shell { display:flex; min-height:100vh; position:relative; z-index:1; }
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar {
+  width: 260px; min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent), #007A5A);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.logo-text { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+.logo-text span { color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+.nav { padding: 16px 12px; flex: 1; }
+.nav-section-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-dim); padding: 8px 12px 6px; font-weight: 600;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  cursor: pointer; margin-bottom: 2px;
+  color: var(--text-muted); font-weight: 500;
+  transition: all 0.2s ease; font-size: 14px;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--accent-dim); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--border);
+}
+.nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: white;
+  font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.live-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: rgba(0,200,150,0.06); border: 1px solid var(--border);
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); animation: pulse 2s infinite;
+}
+
+/* ── Main ────────────────────────────────────────────────────────── */
+.main { flex: 1; overflow-x: hidden; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(5,10,15,0.8);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+.content { padding: 28px 32px; animation: fadeIn 0.4s ease; }
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+.card-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Stat Cards ──────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s ease;
+}
+.stat-card:hover { border-color: var(--border-bright); transform: translateY(-2px); box-shadow: var(--glow); }
+.stat-card::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.stat-card.danger::after { background: linear-gradient(90deg, var(--danger), transparent); }
+.stat-card.warning::after { background: linear-gradient(90deg, var(--warning), transparent); }
+.stat-card.info::after { background: linear-gradient(90deg, var(--info), transparent); }
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; margin-top: 6px; color: var(--accent); }
+.stat-card.danger .stat-value { color: var(--danger); }
+.stat-card.warning .stat-value { color: var(--warning); }
+.stat-card.info .stat-value { color: var(--info); }
+.stat-change { font-size: 12px; margin-top: 4px; color: var(--text-muted); }
+.stat-icon { position: absolute; right: 18px; top: 18px; font-size: 28px; opacity: 0.15; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
+  cursor: pointer; border: none; transition: all 0.2s ease;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #00A87A);
+  color: #0A1F17;
+  box-shadow: 0 4px 20px rgba(0,200,150,0.25);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 30px rgba(0,200,150,0.4); }
+.btn-ghost {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-bright); background: var(--accent-dim); }
+.btn-danger { background: rgba(255,76,106,0.1); color: var(--danger); border: 1px solid rgba(255,76,106,0.3); }
+.btn-sm { padding: 7px 13px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* ── Forms ───────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-control {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-body); font-size: 14px;
+  transition: all 0.2s ease; outline: none;
+}
+.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,200,150,0.1); }
+.form-control::placeholder { color: var(--text-dim); }
+select.form-control option { background: var(--surface2); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* ── Tables ──────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--surface2); }
+th { padding: 12px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border); }
+td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--accent-dim); }
+
+/* ── Badges ──────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+}
+.badge-green { background: rgba(0,200,150,0.12); color: var(--accent); border: 1px solid rgba(0,200,150,0.2); }
+.badge-red { background: rgba(255,76,106,0.12); color: var(--danger); border: 1px solid rgba(255,76,106,0.2); }
+.badge-yellow { background: rgba(255,184,0,0.12); color: var(--warning); border: 1px solid rgba(255,184,0,0.2); }
+.badge-blue { background: rgba(59,158,255,0.12); color: var(--info); border: 1px solid rgba(59,158,255,0.2); }
+.badge-muted { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ── Charts (CSS-based) ─────────────────────────────────────────── */
+.chart-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+.chart-bar-row { display: flex; align-items: center; gap: 12px; }
+.chart-bar-label { font-size: 12px; color: var(--text-muted); width: 90px; text-align: right; flex-shrink: 0; }
+.chart-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.chart-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width 1s ease; }
+.chart-bar-val { font-size: 12px; color: var(--text-muted); width: 50px; }
+
+.donut-wrap { display: flex; align-items: center; gap: 24px; }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── Modal ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 999; display: none;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px;
+  width: 90%; max-width: 560px;
+  max-height: 85vh; overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+  position: relative;
+}
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
+.modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+.modal-close { background: var(--surface2); border: none; color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { color: var(--text); background: var(--surface3); }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  max-width: 320px;
+  display: flex; align-items: flex-start; gap: 10px;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
+.toast.success { border-color: rgba(0,200,150,0.4); }
+.toast.error { border-color: rgba(255,76,106,0.4); }
+.toast.warning { border-color: rgba(255,184,0,0.4); }
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast-text { font-size: 13px; line-height: 1.5; }
+.toast-title { font-weight: 600; margin-bottom: 2px; }
+
+/* ── Sections ────────────────────────────────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Hero Banner ─────────────────────────────────────────────────── */
+.hero-banner {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(0,200,150,0.06) 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px; margin-bottom: 24px;
+  position: relative; overflow: hidden;
+}
+.hero-banner::after {
+  content: '🛡️';
+  position: absolute; right: 32px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 80px; opacity: 0.12;
+}
+.hero-title { font-family: var(--font-head); font-size: 28px; font-weight: 800; line-height: 1.2; }
+.hero-title span { color: var(--accent); }
+.hero-sub { color: var(--text-muted); margin-top: 8px; font-size: 15px; max-width: 500px; }
+.hero-tags { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.hero-tag {
+  padding: 5px 12px; border-radius: 20px;
+  background: var(--accent-dim); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--accent);
+}
+
+/* ── Alert Bar ────────────────────────────────────────────────────── */
+.alert-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  margin-bottom: 16px; font-size: 13px;
+}
+.alert-bar.alert-warning { background: rgba(255,184,0,0.08); border: 1px solid rgba(255,184,0,0.25); color: var(--warning); }
+.alert-bar.alert-danger { background: rgba(255,76,106,0.08); border: 1px solid rgba(255,76,106,0.25); color: var(--danger); }
+.alert-bar.alert-success { background: rgba(0,200,150,0.08); border: 1px solid rgba(0,200,150,0.25); color: var(--accent); }
+
+/* ── Risk Meter ─────────────────────────────────────────────────── */
+.risk-meter { width: 100%; height: 12px; border-radius: 6px; background: var(--surface2); overflow: hidden; }
+.risk-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+.risk-fill.low { background: linear-gradient(90deg, #00C896, #00F5B0); }
+.risk-fill.medium { background: linear-gradient(90deg, #FFB800, #FFD166); }
+.risk-fill.high { background: linear-gradient(90deg, #FF4C6A, #FF7A8A); }
+
+/* ── Step Progress ─────────────────────────────────────────────── */
+.steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.step { display: flex; align-items: center; gap: 8px; flex: 1; }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  background: var(--surface2); color: var(--text-muted);
+  border: 1px solid var(--border); flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.step.active .step-num { background: var(--accent); color: #0A1F17; border-color: var(--accent); }
+.step.done .step-num { background: rgba(0,200,150,0.2); color: var(--accent); border-color: var(--accent); }
+.step-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.step.active .step-label { color: var(--accent); }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+.step-line.done { background: var(--accent); }
+
+/* ── Disruption Card ─────────────────────────────────────────────── */
+.disruption-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.disruption-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  transition: all 0.2s ease;
+}
+.disruption-card:hover { border-color: var(--border-bright); }
+.disruption-card.CRITICAL { border-left: 3px solid var(--danger); }
+.disruption-card.HIGH { border-left: 3px solid var(--warning); }
+.disruption-card.MEDIUM { border-left: 3px solid var(--info); }
+.disruption-type { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.disruption-desc { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.disruption-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* ── Plan Cards ──────────────────────────────────────────────────── */
+.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.plan-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px; cursor: pointer;
+  transition: all 0.3s ease; position: relative; overflow: hidden;
+}
+.plan-card:hover, .plan-card.selected {
+  border-color: var(--accent);
+  background: rgba(0,200,150,0.04);
+  box-shadow: var(--glow);
+}
+.plan-card.selected::before {
+  content: '✓';
+  position: absolute; top: 12px; right: 12px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #0A1F17;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.plan-name { font-family: var(--font-head); font-size: 16px; font-weight: 800; text-transform: uppercase; }
+.plan-price { font-family: var(--font-head); font-size: 30px; font-weight: 800; color: var(--accent); margin: 8px 0 4px; }
+.plan-price span { font-size: 14px; color: var(--text-muted); font-family: var(--font-body); }
+.plan-coverage { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.plan-features li { font-size: 12px; color: var(--text-muted); display: flex; gap: 7px; }
+.plan-features li::before { content: '→'; color: var(--accent); flex-shrink: 0; }
+.plan-popular-badge {
+  position: absolute; top: 0; right: 24px;
+  background: var(--accent); color: #0A1F17;
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 0 0 8px 8px; letter-spacing: 0.5px;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────── */
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+.loading-overlay { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); gap: 12px; font-size: 14px; }
+
+/* ── Fraud Score ─────────────────────────────────────────────────── */
+.fraud-result { border-radius: var(--radius); padding: 16px; margin-top: 14px; }
+.fraud-result.safe { background: rgba(0,200,150,0.06); border: 1px solid rgba(0,200,150,0.2); }
+.fraud-result.risky { background: rgba(255,184,0,0.06); border: 1px solid rgba(255,184,0,0.2); }
+.fraud-result.fraud { background: rgba(255,76,106,0.06); border: 1px solid rgba(255,76,106,0.2); }
+
+/* ── Weather Widget ─────────────────────────────────────────────── */
+.weather-widget { display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.weather-icon { font-size: 32px; }
+.weather-temp { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
+.weather-meta { font-size: 12px; color: var(--text-muted); }
+
+/* ── Timeline ────────────────────────────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 14px; padding-bottom: 18px; position: relative; }
+.timeline-item:not(:last-child)::before {
+  content: ''; position: absolute; left: 14px; top: 28px; bottom: 0;
+  width: 1px; background: var(--border);
+}
+.timeline-dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; border: 1px solid var(--border); }
+.timeline-content { flex: 1; }
+.timeline-title { font-weight: 600; font-size: 14px; }
+.timeline-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.timeline-time { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── Empty State ─────────────────────────────────────────────────── */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+.empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.4; }
+.empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; }
+
+/* ── Grid Layouts ────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ── Tabs ────────────────────────────────────────────────────────── */
+.tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 20px; width: fit-content; }
+.tab { padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); transition: all 0.2s ease; }
+.tab.active { background: var(--surface); color: var(--accent); font-weight: 600; }
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .plan-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { position: fixed; transform: translateX(-100%); }
+  .sidebar.open { transform: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- ── Sidebar ───────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🛡️</div>
+        <div>
+          <div class="logo-text">Gig<span>Shield</span></div>
+          <div class="logo-sub">AI Insurance Platform</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('disruptions')">
+        <span class="icon">⚡</span> Live Disruptions
+        <span class="nav-badge" id="disruption-badge">3</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Worker</div>
+      <div class="nav-item" onclick="navigate('onboard')">
+        <span class="icon">🎯</span> Onboarding
+      </div>
+      <div class="nav-item" onclick="navigate('risk')">
+        <span class="icon">🧠</span> AI Risk Profiling
+      </div>
+      <div class="nav-item" onclick="navigate('policies')">
+        <span class="icon">📋</span> Policies
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Claims</div>
+      <div class="nav-item" onclick="navigate('claims')">
+        <span class="icon">📩</span> Submit Claim
+      </div>
+      <div class="nav-item" onclick="navigate('claims-tracker')">
+        <span class="icon">🔍</span> Track Claims
+        <span class="nav-badge" id="claims-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="navigate('payouts')">
+        <span class="icon">💸</span> Payouts
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Admin</div>
+      <div class="nav-item" onclick="navigate('fraud')">
+        <span class="icon">🔒</span> Fraud Detection
+      </div>
+      <div class="nav-item" onclick="navigate('analytics')">
+        <span class="icon">📈</span> Analytics
+      </div>
+      <div class="nav-item" onclick="navigate('workers')">
+        <span class="icon">👥</span> Workers DB
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <span style="font-size:12px;color:var(--text-muted)">System Online — v1.0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ─────────────────────────────────────────────────── -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="btn btn-ghost btn-sm" id="menu-btn" onclick="toggleSidebar()" style="display:none">☰</button>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+      </div>
+      <div class="topbar-actions">
+        <div style="font-size:12px;color:var(--text-muted);background:var(--surface2);padding:6px 12px;border-radius:6px;border:1px solid var(--border)">
+          📍 India — <span id="current-date"></span>
+        </div>
+        <div id="alert-indicator" style="display:none" class="badge badge-red">
+          ⚠️ Active Alert
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('onboard')">+ Register Worker</button>
+      </div>
+    </header>
+
+    <div class="content" id="main-content">
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Dashboard
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section active" id="sec-dashboard">
+        <div class="hero-banner">
+          <div class="hero-title">AI-Powered Income Protection<br><span>for India's Gig Workers</span></div>
+          <div class="hero-sub">Parametric insurance that automatically pays out when weather, curfews, or disruptions stop your deliveries.</div>
+          <div class="hero-tags">
+            <span class="hero-tag">🌧️ Weather Triggers</span>
+            <span class="hero-tag">🚫 Curfew Coverage</span>
+            <span class="hero-tag">⚡ Instant Payouts</span>
+            <span class="hero-tag">🤖 AI Fraud Detection</span>
+            <span class="hero-tag">📅 Weekly Pricing</span>
+          </div>
+        </div>
+
+        <!-- Active Alert -->
+        <div class="alert-bar alert-warning" id="active-alert-bar">
+          ⚠️ <strong>ACTIVE DISRUPTION:</strong> Severe Pollution (AQI 385) in Delhi — 24 claims auto-triggered. ₹72,000 in payouts processing.
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon">👷</span>
+            <div class="stat-label">Registered Workers</div>
+            <div class="stat-value" id="stat-workers">—</div>
+            <div class="stat-change">↑ 12 this week</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">📋</span>
+            <div class="stat-label">Active Policies</div>
+            <div class="stat-value" id="stat-policies">—</div>
+            <div class="stat-change">Weekly renewals active</div>
+          </div>
+          <div class="stat-card warning">
+            <span class="stat-icon">📩</span>
+            <div class="stat-label">Total Claims</div>
+            <div class="stat-value" id="stat-claims">—</div>
+            <div class="stat-change" id="stat-approval-rate">—% approval rate</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">💸</span>
+            <div class="stat-label">Total Payouts</div>
+            <div class="stat-value" id="stat-payouts">—</div>
+            <div class="stat-change">< 30s processing time</div>
+          </div>
+        </div>
+
+        <!-- Second row stats -->
+        <div class="stats-grid" style="margin-bottom:24px">
+          <div class="stat-card danger">
+            <span class="stat-icon">⚡</span>
+            <div class="stat-label">Active Disruptions</div>
+            <div class="stat-value" id="stat-disruptions">—</div>
+            <div class="stat-change">Across multiple cities</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🤖</span>
+            <div class="stat-label">Auto-Triggered Claims</div>
+            <div class="stat-value" id="stat-auto">—</div>
+            <div class="stat-change">Parametric automation</div>
+          </div>
+          <div class="stat-card warning">
+            <span class="stat-icon">🔒</span>
+            <div class="stat-label">Fraud Detected</div>
+            <div class="stat-value" id="stat-fraud">—</div>
+            <div class="stat-change">AI anomaly detection</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">📊</span>
+            <div class="stat-label">Loss Ratio</div>
+            <div class="stat-value" id="stat-loss-ratio">—</div>
+            <div class="stat-change">Target < 70%</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Weekly Trend Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📈 Weekly Activity Trend</div>
+                <div class="card-subtitle">Claims & policies last 7 days</div>
+              </div>
+            </div>
+            <div id="weekly-trend-chart"></div>
+          </div>
+
+          <!-- City Breakdown -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🏙️ City Coverage</div>
+            </div>
+            <div id="city-chart"></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:20px">
+          <!-- Recent Claims -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 Recent Claims</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('claims-tracker')">View All →</button>
+            </div>
+            <div id="recent-claims-list"></div>
+          </div>
+
+          <!-- Disruption Types -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚡ Disruption Impact</div>
+            </div>
+            <div id="disruption-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Onboarding
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-onboard">
+        <div style="max-width:640px">
+          <div class="steps" id="onboard-steps">
+            <div class="step active" id="step-1">
+              <div class="step-num">1</div>
+              <div class="step-label">Personal Info</div>
+            </div>
+            <div class="step-line" id="line-1"></div>
+            <div class="step" id="step-2">
+              <div class="step-num">2</div>
+              <div class="step-label">Work Details</div>
+            </div>
+            <div class="step-line" id="line-2"></div>
+            <div class="step" id="step-3">
+              <div class="step-num">3</div>
+              <div class="step-label">Choose Plan</div>
+            </div>
+            <div class="step-line" id="line-3"></div>
+            <div class="step" id="step-4">
+              <div class="step-num">4</div>
+              <div class="step-label">Confirm</div>
+            </div>
+          </div>
+
+          <!-- Step 1 -->
+          <div id="onboard-step-1">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">👋 Personal Information</div>
+                  <div class="card-subtitle">Basic details for KYC verification</div>
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input class="form-control" id="ob-name" placeholder="Rajesh Kumar" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mobile Number</label>
+                  <input class="form-control" id="ob-phone" placeholder="+91 98765 43210" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <select class="form-control" id="ob-city">
+                  <option value="">Select City</option>
+                  <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+                  <option>Chennai</option><option>Hyderabad</option><option>Pune</option><option>Kolkata</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">UPI / Bank Account</label>
+                <input class="form-control" id="ob-bank" placeholder="yourname@upi or account number" />
+              </div>
+              <button class="btn btn-primary" onclick="obNext(1)" style="margin-top:8px">Continue →</button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div id="onboard-step-2" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">💼 Work Details</div>
+                  <div class="card-subtitle">Helps us calculate your risk & premium</div>
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Platform</label>
+                  <select class="form-control" id="ob-platform">
+                    <option value="">Select Platform</option>
+                    <option>Zomato</option><option>Swiggy</option><option>Zepto</option>
+                    <option>Blinkit</option><option>Amazon</option><option>Flipkart</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Delivery Segment</label>
+                  <select class="form-control" id="ob-segment">
+                    <option value="food">🍕 Food Delivery</option>
+                    <option value="grocery">🛒 Grocery/Q-Commerce</option>
+                    <option value="ecommerce">📦 E-Commerce</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Avg Weekly Earning (₹)</label>
+                  <input class="form-control" id="ob-earning" type="number" placeholder="2500" value="2500" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Avg Daily Hours</label>
+                  <input class="form-control" id="ob-hours" type="number" placeholder="8" value="8" min="1" max="16" />
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:8px">
+                <button class="btn btn-ghost" onclick="obBack(2)">← Back</button>
+                <button class="btn btn-primary" onclick="obNext(2)" id="ob-assess-btn">Assess Risk & Continue →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 — Plan Selection -->
+          <div id="onboard-step-3" style="display:none">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">🧠 AI Risk Assessment</div>
+                  <div class="card-subtitle">Based on your profile & city conditions</div>
+                </div>
+                <div id="ob-risk-badge"></div>
+              </div>
+              <div id="ob-risk-result"></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📋 Choose Your Weekly Plan</div>
+              </div>
+              <div class="plan-grid" id="plan-cards"></div>
+              <div style="display:flex;gap:10px;margin-top:18px">
+                <button class="btn btn-ghost" onclick="obBack(3)">← Back</button>
+                <button class="btn btn-primary" onclick="obNext(3)">Activate Policy →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 — Confirm -->
+          <div id="onboard-step-4" style="display:none">
+            <div class="card">
+              <div style="text-align:center;padding:20px 0">
+                <div style="font-size:60px;margin-bottom:16px">🎉</div>
+                <div style="font-family:var(--font-head);font-size:24px;font-weight:800;color:var(--accent)">You're Protected!</div>
+                <div style="color:var(--text-muted);margin-top:8px;font-size:15px">Your GigShield policy is now active</div>
+              </div>
+              <div id="policy-summary" class="card" style="background:var(--surface2);margin-top:16px"></div>
+              <div style="margin-top:18px;display:flex;gap:10px;justify-content:center">
+                <button class="btn btn-primary" onclick="navigate('dashboard')">Go to Dashboard</button>
+                <button class="btn btn-ghost" onclick="navigate('claims')">Submit a Claim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Risk Profiling
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-risk">
+        <div class="grid-2">
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">🧠 AI Risk Profiler</div>
+                  <div class="card-subtitle">Enter parameters for instant risk assessment</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <select class="form-control" id="rp-city" onchange="rpUpdateWeather()">
+                  <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+                  <option>Chennai</option><option>Hyderabad</option><option>Pune</option><option>Kolkata</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Segment</label>
+                <select class="form-control" id="rp-segment">
+                  <option value="food">Food Delivery</option>
+                  <option value="grocery">Grocery/Q-Commerce</option>
+                  <option value="ecommerce">E-Commerce</option>
+                </select>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Avg Weekly Earning</label>
+                  <input class="form-control" id="rp-earning" type="number" value="2500" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Daily Hours</label>
+                  <input class="form-control" id="rp-hours" type="number" value="8" />
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="runRiskAssessment()" id="rp-btn" style="width:100%">
+                🤖 Run AI Assessment
+              </button>
+            </div>
+            <!-- Weather Widget -->
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px">🌤️ Live Weather Data</div>
+              <div class="weather-widget" id="rp-weather">
+                <div class="weather-icon">🌤️</div>
+                <div>
+                  <div class="weather-temp">—°C</div>
+                  <div class="weather-meta">Loading...</div>
+                </div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;gap:4px;text-align:right">
+                  <div style="font-size:12px;color:var(--text-muted)">AQI: <span id="rp-aqi">—</span></div>
+                  <div style="font-size:12px;color:var(--text-muted)">Humidity: <span id="rp-humidity">—</span>%</div>
+                  <div style="font-size:12px;color:var(--text-muted)">Rain: <span id="rp-rain">—</span>mm</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" id="rp-result-card">
+              <div class="empty-state">
+                <div class="empty-icon">🧠</div>
+                <div class="empty-title">Run Assessment First</div>
+                <div class="empty-sub">Fill in the form and click "Run AI Assessment"</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Risk Distribution -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div class="card-title">📊 Platform-Wide Risk Distribution</div>
+          </div>
+          <div id="risk-dist-chart" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-muted)">BY SEGMENT</div>
+              <div class="chart-bar-wrap">
+                <div class="chart-bar-row"><div class="chart-bar-label">Food 🍕</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:75%"></div></div><div class="chart-bar-val">HIGH</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Grocery 🛒</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:60%"></div></div><div class="chart-bar-val">MED</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Ecomm 📦</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:45%"></div></div><div class="chart-bar-val">LOW</div></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-muted)">BY CITY</div>
+              <div class="chart-bar-wrap">
+                <div class="chart-bar-row"><div class="chart-bar-label">Delhi</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:80%"></div></div><div class="chart-bar-val">72</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Mumbai</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:70%"></div></div><div class="chart-bar-val">65</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Chennai</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:65%"></div></div><div class="chart-bar-val">68</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Bengaluru</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:55%"></div></div><div class="chart-bar-val">55</div></div>
+                <div class="chart-bar-row"><div class="chart-bar-label">Hyderabad</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:50%"></div></div><div class="chart-bar-val">50</div></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-muted)">AI MODEL FACTORS</div>
+              <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot" style="background:rgba(0,200,150,0.1)">🌧️</div><div class="timeline-content"><div class="timeline-title">Weather History</div><div class="timeline-desc">Last 90 days city weather pattern</div></div></div>
+                <div class="timeline-item"><div class="timeline-dot" style="background:rgba(0,200,150,0.1)">📍</div><div class="timeline-content"><div class="timeline-title">Zone Risk Map</div><div class="timeline-desc">Flood/heat zone classification</div></div></div>
+                <div class="timeline-item"><div class="timeline-dot" style="background:rgba(0,200,150,0.1)">🕐</div><div class="timeline-content"><div class="timeline-title">Working Hours</div><div class="timeline-desc">Peak hour outdoor exposure</div></div></div>
+                <div class="timeline-item"><div class="timeline-dot" style="background:rgba(0,200,150,0.1)">📦</div><div class="timeline-content"><div class="timeline-title">Delivery Segment</div><div class="timeline-desc">Outdoor exposure by category</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Disruptions
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-disruptions">
+        <div class="alert-bar alert-danger" style="margin-bottom:20px">
+          🔴 <strong>3 ACTIVE DISRUPTIONS</strong> — Parametric triggers are live. Affected workers will receive auto-payouts.
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div class="tabs">
+            <div class="tab active" onclick="filterDisruptions('all',this)">All</div>
+            <div class="tab" onclick="filterDisruptions('CRITICAL',this)">Critical</div>
+            <div class="tab" onclick="filterDisruptions('HIGH',this)">High</div>
+            <div class="tab" onclick="filterDisruptions('MEDIUM',this)">Medium</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('add-disruption-modal')">+ Log Disruption</button>
+        </div>
+
+        <div class="disruption-grid" id="disruptions-grid"></div>
+
+        <!-- Auto-trigger section -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div>
+              <div class="card-title">⚡ Parametric Auto-Trigger Engine</div>
+              <div class="card-subtitle">Automatically initiate claims for all affected workers in a disruption zone</div>
+            </div>
+          </div>
+          <div class="form-grid-2" style="max-width:480px">
+            <div class="form-group">
+              <label class="form-label">Select Disruption Event</label>
+              <select class="form-control" id="auto-trigger-disruption"></select>
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="runAutoTrigger()" id="auto-trigger-btn" style="width:100%">
+                ⚡ Auto-Trigger Claims
+              </button>
+            </div>
+          </div>
+          <div id="auto-trigger-result"></div>
+        </div>
+
+        <!-- Coverage Map -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div class="card-title">🗺️ India Coverage Map</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:4px">
+            <!-- Simplified city cards acting as map nodes -->
+            <div id="city-card-Mumbai" onclick="showCityDetails('Mumbai')" style="cursor:pointer;text-align:center;padding:16px 8px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted)">MUM</div>
+              <div style="font-size:20px;margin:6px 0">🏙️</div>
+              <div style="font-size:10px;color:var(--accent)">Active</div>
+            </div>
+            <div id="city-card-Delhi" onclick="showCityDetails('Delhi')" style="cursor:pointer;text-align:center;padding:16px 8px;background:rgba(255,76,106,0.08);border-radius:10px;border:1px solid rgba(255,76,106,0.3);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--danger)">DEL</div>
+              <div style="font-size:20px;margin:6px 0">⚠️</div>
+              <div style="font-size:10px;color:var(--danger)">Alert!</div>
+            </div>
+            <div id="city-card-Bengaluru" onclick="showCityDetails('Bengaluru')" style="cursor:pointer;text-align:center;padding:16px 8px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted)">BLR</div>
+              <div style="font-size:20px;margin:6px 0">🏙️</div>
+              <div style="font-size:10px;color:var(--accent)">Active</div>
+            </div>
+            <div id="city-card-Chennai" onclick="showCityDetails('Chennai')" style="cursor:pointer;text-align:center;padding:16px 8px;background:rgba(255,184,0,0.08);border-radius:10px;border:1px solid rgba(255,184,0,0.3);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--warning)">CHN</div>
+              <div style="font-size:20px;margin:6px 0">⚠️</div>
+              <div style="font-size:10px;color:var(--warning)">Watch</div>
+            </div>
+            <div id="city-card-Hyderabad" onclick="showCityDetails('Hyderabad')" style="cursor:pointer;text-align:center;padding:16px 8px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted)">HYD</div>
+              <div style="font-size:20px;margin:6px 0">🏙️</div>
+              <div style="font-size:10px;color:var(--accent)">Active</div>
+            </div>
+            <div id="city-card-Pune" onclick="showCityDetails('Pune')" style="cursor:pointer;text-align:center;padding:16px 8px;background:rgba(255,76,106,0.08);border-radius:10px;border:1px solid rgba(255,76,106,0.3);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--danger)">PUN</div>
+              <div style="font-size:20px;margin:6px 0">⚠️</div>
+              <div style="font-size:10px;color:var(--danger)">Alert!</div>
+            </div>
+            <div id="city-card-Kolkata" onclick="showCityDetails('Kolkata')" style="cursor:pointer;text-align:center;padding:16px 8px;background:rgba(255,184,0,0.08);border-radius:10px;border:1px solid rgba(255,184,0,0.3);transition:all 0.2s ease" class="city-node">
+              <div style="font-size:11px;font-weight:700;color:var(--warning)">KOL</div>
+              <div style="font-size:20px;margin:6px 0">⚠️</div>
+              <div style="font-size:10px;color:var(--warning)">Watch</div>
+            </div>
+          </div>
+          <div id="city-detail-panel" style="margin-top:16px;display:none"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Claims
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-claims">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📩 Submit a Claim</div>
+                <div class="card-subtitle">Claims are validated and paid in real-time</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Worker ID</label>
+              <input class="form-control" id="claim-worker-id" placeholder="WRK-00001" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Policy ID</label>
+              <input class="form-control" id="claim-policy-id" placeholder="POL-XXXXXXXX" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Disruption Event</label>
+              <select class="form-control" id="claim-disruption-id">
+                <option value="">Select Disruption Event</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hours Lost (approx)</label>
+              <input class="form-control" id="claim-hours" type="number" placeholder="4" min="1" max="12" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description (optional)</label>
+              <textarea class="form-control" id="claim-desc" rows="2" placeholder="Brief description of how this disruption affected your work..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="submitClaim()" id="claim-submit-btn" style="width:100%;margin-top:4px">
+              Submit Claim → Auto Review
+            </button>
+
+            <div id="claim-result" style="margin-top:16px"></div>
+          </div>
+
+          <!-- How Claims Work -->
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title" style="margin-bottom:14px">⚡ How Parametric Claims Work</div>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:rgba(0,200,150,0.15);color:var(--accent)">1</div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">Disruption Detected</div>
+                    <div class="timeline-desc">Real-time sensors detect qualifying events (AQI > 300, Rain > 100mm, etc.)</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:rgba(0,200,150,0.15);color:var(--accent)">2</div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">AI Fraud Check</div>
+                    <div class="timeline-desc">Anomaly detection scans location, frequency, and claim validity</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:rgba(0,200,150,0.15);color:var(--accent)">3</div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">Instant Approval</div>
+                    <div class="timeline-desc">No paperwork. Parametric payouts auto-approved based on event data</div>
+                  </div>
+                </div>
+                <div class="timeline-item" style="padding-bottom:0">
+                  <div class="timeline-dot" style="background:rgba(0,200,150,0.15);color:var(--accent)">4</div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">UPI Payout in &lt;30 Seconds</div>
+                    <div class="timeline-desc">Direct transfer to worker's registered UPI/bank account</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px">📋 Coverage Matrix</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Event</th><th>Threshold</th><th>Payout %</th></tr></thead>
+                  <tbody>
+                    <tr><td>🌪️ Cyclone</td><td>Category 1+</td><td><span class="badge badge-green">100%</span></td></tr>
+                    <tr><td>🌊 Flood</td><td>Waterlogging</td><td><span class="badge badge-green">100%</span></td></tr>
+                    <tr><td>🌧️ Heavy Rain</td><td>>100mm/day</td><td><span class="badge badge-yellow">80%</span></td></tr>
+                    <tr><td>🔥 Extreme Heat</td><td>>44°C</td><td><span class="badge badge-yellow">70%</span></td></tr>
+                    <tr><td>😷 Pollution</td><td>AQI > 300</td><td><span class="badge badge-yellow">65%</span></td></tr>
+                    <tr><td>🚫 Curfew</td><td>Sec 144</td><td><span class="badge badge-green">85%</span></td></tr>
+                    <tr><td>🛑 Strike</td><td>Bandh called</td><td><span class="badge badge-yellow">80%</span></td></tr>
+                    <tr><td>💻 App Outage</td><td>>4hrs</td><td><span class="badge badge-blue">50%</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Claims Tracker
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-claims-tracker">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div class="tabs">
+            <div class="tab active" onclick="filterClaims('all',this)">All Claims</div>
+            <div class="tab" onclick="filterClaims('approved',this)">Approved</div>
+            <div class="tab" onclick="filterClaims('under_review',this)">Under Review</div>
+            <div class="tab" onclick="filterClaims('rejected',this)">Rejected</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input class="form-control" id="claims-search" placeholder="Search worker ID..." style="width:200px" oninput="filterClaims('search',null)" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Claim ID</th><th>Worker</th><th>City</th><th>Disruption</th><th>Amount</th><th>Fraud Score</th><th>Status</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="claims-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Payouts
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-payouts">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Processed</div>
+            <div class="stat-value" id="payout-total-count">—</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-label">Total Amount</div>
+            <div class="stat-value" id="payout-total-amount">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Payout</div>
+            <div class="stat-value" id="payout-avg">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Processing Time</div>
+            <div class="stat-value">< 30s</div>
+            <div class="stat-change">Real-time UPI</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Payout ID</th><th>Claim ID</th><th>Worker</th><th>Amount</th><th>Method</th><th>Status</th><th>Time</th></tr>
+            </thead>
+            <tbody id="payouts-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Policies
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-policies">
+        <div style="display:flex;justify-content:space-between;margin-bottom:18px;align-items:center">
+          <div class="card-title">All Active Policies</div>
+          <button class="btn btn-primary btn-sm" onclick="navigate('onboard')">+ New Policy</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Policy ID</th><th>Worker</th><th>City</th><th>Plan</th><th>Weekly Premium</th><th>Coverage</th><th>Expires</th><th>Status</th></tr>
+            </thead>
+            <tbody id="policies-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Fraud Detection
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-fraud">
+        <div class="grid-2">
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">🔒 Fraud Detection Engine</div>
+                  <div class="card-subtitle">AI-powered anomaly detection for claims</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Claim ID to Analyze</label>
+                <input class="form-control" id="fraud-claim-id" placeholder="CLM-XXXXXXXX" />
+              </div>
+              <button class="btn btn-primary" onclick="analyzeClaimFraud()" style="width:100%">
+                🔍 Analyze for Fraud
+              </button>
+              <div id="fraud-analysis-result" style="margin-top:16px"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px">🚨 Fraud Signals Monitored</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <span style="font-size:20px">📍</span>
+                  <div>
+                    <div style="font-weight:600;font-size:13px">Location Mismatch</div>
+                    <div style="font-size:12px;color:var(--text-muted)">Worker location vs disruption zone cross-check</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <span style="font-size:20px">🔄</span>
+                  <div>
+                    <div style="font-weight:600;font-size:13px">High Claim Frequency</div>
+                    <div style="font-size:12px;color:var(--text-muted)">>3 claims per 30-day period flagged</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <span style="font-size:20px">💰</span>
+                  <div>
+                    <div style="font-weight:600;font-size:13px">Amount Anomaly</div>
+                    <div style="font-size:12px;color:var(--text-muted)">Claim exceeds policy coverage or earnings baseline</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <span style="font-size:20px">📋</span>
+                  <div>
+                    <div style="font-weight:600;font-size:13px">Duplicate Claim</div>
+                    <div style="font-size:12px;color:var(--text-muted)">Same disruption ID claimed multiple times by same worker</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">📊 Fraud Stats</div>
+            <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div class="stat-card danger" style="padding:14px">
+                <div class="stat-label" style="font-size:10px">Flagged</div>
+                <div class="stat-value" style="font-size:24px" id="fraud-flagged">—</div>
+              </div>
+              <div class="stat-card" style="padding:14px">
+                <div class="stat-label" style="font-size:10px">Saved</div>
+                <div class="stat-value" style="font-size:24px" id="fraud-saved">₹—</div>
+              </div>
+            </div>
+            <div class="card-title" style="margin-bottom:12px;font-size:14px">Flagged Claims</div>
+            <div id="fraud-claims-list">
+              <div class="loading-overlay"><div class="spinner"></div>Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Analytics
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-analytics">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Claim Approval Rate</div><div class="stat-value" id="an-approval">—</div></div>
+          <div class="stat-card info"><div class="stat-label">Loss Ratio</div><div class="stat-value" id="an-loss">—</div></div>
+          <div class="stat-card warning"><div class="stat-label">Total Premium</div><div class="stat-value" id="an-premium">—</div></div>
+          <div class="stat-card"><div class="stat-label">Total Payouts</div><div class="stat-value" id="an-payout">—</div></div>
+        </div>
+
+        <div class="grid-2" style="margin-top:4px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">📊 Weekly Claims Trend</div>
+            <div id="analytics-weekly-chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">🏙️ City Performance</div>
+            <div id="analytics-city-chart"></div>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">📦 Platform Distribution</div>
+            <div id="analytics-platform-chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">⚡ Risk Distribution</div>
+            <div id="analytics-risk-chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">💸 Disruption Payouts</div>
+            <div id="analytics-disruption-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION: Workers DB
+      ══════════════════════════════════════════════════════════ -->
+      <div class="section" id="sec-workers">
+        <div style="display:flex;gap:10px;margin-bottom:18px;align-items:center;flex-wrap:wrap">
+          <select class="form-control" id="workers-city-filter" style="width:140px" onchange="loadWorkers()">
+            <option value="">All Cities</option>
+            <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+            <option>Chennai</option><option>Hyderabad</option><option>Pune</option><option>Kolkata</option>
+          </select>
+          <select class="form-control" id="workers-platform-filter" style="width:140px" onchange="loadWorkers()">
+            <option value="">All Platforms</option>
+            <option>Zomato</option><option>Swiggy</option><option>Zepto</option>
+            <option>Blinkit</option><option>Amazon</option><option>Flipkart</option>
+          </select>
+          <select class="form-control" id="workers-segment-filter" style="width:160px" onchange="loadWorkers()">
+            <option value="">All Segments</option>
+            <option value="food">Food</option><option value="grocery">Grocery</option><option value="ecommerce">Ecommerce</option>
+          </select>
+          <div style="margin-left:auto;font-size:13px;color:var(--text-muted)" id="workers-count">— workers</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Worker ID</th><th>Name</th><th>City</th><th>Platform</th><th>Segment</th><th>Avg Week ₹</th><th>Risk Score</th><th>Status</th></tr>
+            </thead>
+            <tbody id="workers-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- ── Modals ────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="add-disruption-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Log New Disruption</div>
+      <button class="modal-close" onclick="closeModal('add-disruption-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Disruption Type</label>
+      <select class="form-control" id="new-dis-type">
+        <option value="extreme_heat">🔥 Extreme Heat</option>
+        <option value="heavy_rain">🌧️ Heavy Rain</option>
+        <option value="flood">🌊 Flood</option>
+        <option value="cyclone">🌪️ Cyclone</option>
+        <option value="severe_pollution">😷 Severe Pollution</option>
+        <option value="curfew">🚫 Curfew / Section 144</option>
+        <option value="strike">🛑 Bandh / Strike</option>
+        <option value="app_outage">💻 Platform App Outage</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">City</label>
+      <select class="form-control" id="new-dis-city">
+        <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+        <option>Chennai</option><option>Hyderabad</option><option>Pune</option><option>Kolkata</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Severity</label>
+      <select class="form-control" id="new-dis-severity">
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="CRITICAL">Critical</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-control" id="new-dis-desc" placeholder="Brief description of event..." />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal('add-disruption-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addDisruption()" style="flex:1">Log & Activate →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const API = 'http://localhost:5000/api';
+let state = {
+  currentSection: 'dashboard',
+  workers: [], policies: [], claims: [], disruptions: [], payouts: [],
+  analytics: null,
+  onboard: { workerId: null, riskData: null, selectedPlan: null, policy: null },
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 100000 ? `₹${(n/100000).toFixed(1)}L` : n >= 1000 ? `₹${(n/1000).toFixed(1)}K` : `₹${n}`;
+
+function toast(title, msg, type = 'success') {
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-icon">${icons[type]||'ℹ️'}</div><div class="toast-text"><div class="toast-title">${title}</div>${msg}</div>`;
+  $('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+function setBadge(el, n) {
+  if (!el) return;
+  if (n > 0) { el.style.display = ''; el.textContent = n; }
+  else el.style.display = 'none';
+}
+
+function getRiskClass(score) {
+  if (score >= 70) return 'high';
+  if (score >= 40) return 'medium';
+  return 'low';
+}
+
+function getStatusBadge(status) {
+  const map = {
+    approved: 'badge-green', active: 'badge-green', completed: 'badge-green', paid: 'badge-green',
+    rejected: 'badge-red', expired: 'badge-red', fraud: 'badge-red',
+    under_review: 'badge-yellow', pending: 'badge-yellow', processing: 'badge-yellow',
+    inactive: 'badge-muted'
+  };
+  return `<span class="badge ${map[status]||'badge-muted'}">${status.replace('_',' ').toUpperCase()}</span>`;
+}
+
+function disruptionEmoji(type) {
+  const map = { extreme_heat:'🔥', heavy_rain:'🌧️', flood:'🌊', cyclone:'🌪️', severe_pollution:'😷', curfew:'🚫', strike:'🛑', app_outage:'💻' };
+  return map[type] || '⚡';
+}
+
+function weatherIcon(cond) {
+  if (!cond) return '🌤️';
+  const c = cond.toLowerCase();
+  if (c.includes('rain') || c.includes('shower')) return '🌧️';
+  if (c.includes('storm') || c.includes('thunder')) return '⛈️';
+  if (c.includes('cloud')) return '☁️';
+  if (c.includes('haze') || c.includes('fog') || c.includes('smog')) return '🌫️';
+  if (c.includes('sunny') || c.includes('clear')) return '☀️';
+  return '🌤️';
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function navigate(section) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const sec = $(`sec-${section}`);
+  if (sec) sec.classList.add('active');
+
+  // Update nav item
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${section}'`)) n.classList.add('active');
+  });
+
+  // Update page title
+  const titles = {
+    dashboard: '📊 Dashboard', disruptions: '⚡ Live Disruptions', onboard: '🎯 Worker Onboarding',
+    risk: '🧠 AI Risk Profiling', policies: '📋 Policies', claims: '📩 Submit Claim',
+    'claims-tracker': '🔍 Track Claims', payouts: '💸 Payouts', fraud: '🔒 Fraud Detection',
+    analytics: '📈 Analytics', workers: '👥 Workers Database'
+  };
+  $('page-title').textContent = titles[section] || section;
+  state.currentSection = section;
+
+  // Load section data
+  if (section === 'dashboard') loadDashboard();
+  else if (section === 'claims-tracker') loadClaimsTable('all');
+  else if (section === 'payouts') loadPayouts();
+  else if (section === 'policies') loadPolicies();
+  else if (section === 'fraud') loadFraudSection();
+  else if (section === 'analytics') loadAnalytics();
+  else if (section === 'workers') loadWorkers();
+  else if (section === 'disruptions') loadDisruptions();
+  else if (section === 'risk') rpUpdateWeather();
+}
+
+function toggleSidebar() {
+  $('sidebar').classList.toggle('open');
+}
+
+// ── API Calls ─────────────────────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = null) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    return await res.json();
+  } catch (err) {
+    // Return mock data when backend is offline
+    return getMockData(path, method, body);
+  }
+}
+
+// ── Mock Data (standalone mode — no backend required) ───────────────────────
+function getMockData(path, method, body) {
+  if (path.includes('/analytics/dashboard')) return { success: true, data: {
+    summary: { totalWorkers: 50, activePolicies: 38, totalClaims: 124, approvedClaims: 98, rejectedClaims: 14, pendingClaims: 12, totalPremiumsCollected: 142000, totalPayoutsProcessed: 89500, claimApprovalRate: 79, lossRatio: 63, fraudDetectionRate: 11, autoTriggeredClaims: 68, activeDisruptions: 3 },
+    cityBreakdown: { Mumbai: {workers:12,policies:9,claims:28}, Delhi: {workers:15,policies:12,claims:41}, Bengaluru: {workers:9,policies:7,claims:18}, Chennai: {workers:6,policies:4,claims:14}, Hyderabad: {workers:4,policies:3,claims:9}, Pune: {workers:2,policies:2,claims:8}, Kolkata: {workers:2,policies:1,claims:6} },
+    disruptionBreakdown: { extreme_heat:{count:32,amount:28000}, heavy_rain:{count:28,amount:24000}, flood:{count:14,amount:18000}, severe_pollution:{count:26,amount:12000}, curfew:{count:12,amount:5000}, strike:{count:8,amount:2500}, app_outage:{count:4,amount:1000} },
+    weeklyTrend: [{date:'Mon',claims:8,policies:4,payouts:12000},{date:'Tue',claims:12,policies:6,payouts:18000},{date:'Wed',claims:6,policies:3,payouts:9000},{date:'Thu',claims:18,policies:8,payouts:27000},{date:'Fri',claims:14,policies:5,payouts:21000},{date:'Sat',claims:22,policies:9,payouts:33000},{date:'Sun',claims:9,policies:3,payouts:14000}],
+    riskDistribution: { LOW: 14, MEDIUM: 23, HIGH: 13 },
+    platformDistribution: { Zomato: 16, Swiggy: 14, Zepto: 8, Blinkit: 6, Amazon: 4, Flipkart: 2 },
+    recentClaims: [
+      {id:'CLM-AB12',workerName:'Rajesh K',city:'Delhi',disruptionType:'severe_pollution',claimAmount:850,status:'approved',isAutoTriggered:true,fraudCheck:{fraudScore:8},createdAt:new Date().toISOString()},
+      {id:'CLM-CD34',workerName:'Priya M',city:'Mumbai',disruptionType:'heavy_rain',claimAmount:1200,status:'approved',isAutoTriggered:false,fraudCheck:{fraudScore:15},createdAt:new Date().toISOString()},
+      {id:'CLM-EF56',workerName:'Arjun S',city:'Pune',disruptionType:'curfew',claimAmount:960,status:'under_review',isAutoTriggered:false,fraudCheck:{fraudScore:45},createdAt:new Date().toISOString()},
+      {id:'CLM-GH78',workerName:'Meena R',city:'Delhi',disruptionType:'severe_pollution',claimAmount:720,status:'rejected',isAutoTriggered:false,fraudCheck:{fraudScore:75},createdAt:new Date().toISOString()},
+      {id:'CLM-IJ90',workerName:'Suresh P',city:'Chennai',disruptionType:'flood',claimAmount:1800,status:'approved',isAutoTriggered:true,fraudCheck:{fraudScore:5},createdAt:new Date().toISOString()},
+    ],
+    recentPayouts: []
+  }};
+
+  if (path.includes('/disruptions')) return { success: true, data: [
+    {id:'DIS-0001',type:'extreme_heat',description:'Temperature exceeded 45°C',severity:'HIGH',city:'Delhi',date:new Date(Date.now()-2*86400000),triggered:true,claimsGenerated:24},
+    {id:'DIS-0002',type:'heavy_rain',description:'Red alert — rainfall >150mm/24hr',severity:'HIGH',city:'Mumbai',date:new Date(Date.now()-4*86400000),triggered:true,claimsGenerated:18},
+    {id:'DIS-0003',type:'flood',description:'Waterlogging in 12 zones reported',severity:'CRITICAL',city:'Chennai',date:new Date(Date.now()-6*86400000),triggered:true,claimsGenerated:36},
+    {id:'DIS-0004',type:'severe_pollution',description:'AQI 385 — Very Hazardous level',severity:'HIGH',city:'Delhi',date:new Date(Date.now()-1*86400000),triggered:true,claimsGenerated:29},
+    {id:'DIS-0005',type:'curfew',description:'Section 144 imposed — 5 zones',severity:'MEDIUM',city:'Pune',date:new Date(Date.now()-3*86400000),triggered:true,claimsGenerated:11},
+    {id:'DIS-0006',type:'strike',description:'Transport bandh by unions',severity:'MEDIUM',city:'Kolkata',date:new Date(Date.now()-5*86400000),triggered:true,claimsGenerated:9},
+    {id:'DIS-0007',type:'cyclone',description:'Cyclone Biparjoy — Category 2',severity:'CRITICAL',city:'Chennai',date:new Date(Date.now()-7*86400000),triggered:true,claimsGenerated:42},
+    {id:'DIS-0008',type:'app_outage',description:'Zomato/Swiggy outage >4hrs',severity:'MEDIUM',city:'Bengaluru',date:new Date(),triggered:true,claimsGenerated:7}
+  ]};
+
+  if (path.includes('/workers/register') && method === 'POST') {
+    const w = { id:`WRK-${String(Math.floor(51+Math.random()*50)).padStart(5,'0')}`, riskScore: Math.floor(40+Math.random()*40), ...body, kycStatus:'verified', joinedAt: new Date().toISOString() };
+    return { success: true, data: w };
+  }
+
+  if (path.includes('/risk/assess') && method === 'POST') {
+    const riskScore = Math.floor(40+Math.random()*45);
+    const earning = body?.avgWeeklyEarning || 2500;
+    return { success: true, data: {
+      riskScore, riskCategory: riskScore>70?'HIGH':riskScore>50?'MEDIUM':'LOW',
+      weeklyPremiums: { basic: Math.round(earning*0.015), standard: Math.round(earning*0.022), premium: Math.round(earning*0.032) },
+      coverageAmounts: { basic: Math.round(earning*1.5), standard: Math.round(earning*2.5), premium: Math.round(earning*4.0) },
+      currentWeather: { temp:38, humidity:60, rainfall:20, aqi:220, condition:'Partly Cloudy' },
+      activeDisruptions: [],
+      assessedAt: new Date().toISOString()
+    }};
+  }
+
+  if (path.includes('/policies/create') && method === 'POST') {
+    const pid = `POL-${Math.random().toString(36).substr(2,8).toUpperCase()}`;
+    return { success: true, data: {
+      id: pid, workerId: body.workerId, workerName: 'New Worker',
+      coverageType: body.coverageType, weeklyPremium: 75, coverageAmount: 5000,
+      status: 'active', startDate: new Date().toISOString(),
+      endDate: new Date(Date.now()+7*86400000).toISOString(), disruptions_covered: ['extreme_heat','heavy_rain','flood']
+    }};
+  }
+
+  if (path.includes('/claims/submit') && method === 'POST') {
+    const approved = Math.random() > 0.2;
+    return { success: true, data: {
+      id: `CLM-${Math.random().toString(36).substr(2,8).toUpperCase()}`,
+      claimAmount: Math.floor(400+Math.random()*1200),
+      status: approved ? 'approved' : Math.random()>0.5 ? 'under_review' : 'rejected',
+      fraudCheck: { fraudScore: Math.floor(5+Math.random()*40), flags: [], recommendation: approved?'APPROVE':'REVIEW' },
+      payoutStatus: approved ? 'completed' : null,
+      createdAt: new Date().toISOString()
+    }, message: approved ? 'Claim approved! Processing payout...' : 'Claim under review'};
+  }
+
+  if (path.includes('/claims/auto-trigger') && method === 'POST') {
+    return { success: true, data: { affectedWorkers: Math.floor(5+Math.random()*20), claimsTriggered: Math.floor(3+Math.random()*15) }, message: 'Auto-trigger completed' };
+  }
+
+  if (path.includes('/premium/calculate') && method === 'POST') {
+    const e = body?.avgWeeklyEarning || 2500;
+    const rs = Math.floor(35+Math.random()*50);
+    return { success: true, data: {
+      riskScore: rs, riskCategory: rs>70?'HIGH':rs>50?'MEDIUM':'LOW',
+      premiums: { basic: Math.round(e*0.015), standard: Math.round(e*0.022), premium: Math.round(e*0.032) },
+      coverages: { basic: Math.round(e*1.5), standard: Math.round(e*2.5), premium: Math.round(e*4.0) },
+      weather: { temp:34, humidity:65, rainfall:25, aqi:180, condition:'Partly Cloudy' }
+    }};
+  }
+
+  if (path.includes('/workers')) return { success: true, data: Array.from({length:20},(_,i)=>({
+    id:`WRK-${String(i+1).padStart(5,'0')}`, name:`Worker ${i+1}`,
+    city:['Mumbai','Delhi','Bengaluru','Chennai','Hyderabad'][i%5],
+    platform:['Zomato','Swiggy','Zepto','Amazon','Blinkit'][i%5],
+    segment:['food','grocery','ecommerce'][i%3],
+    avgWeeklyEarning:Math.floor(2000+Math.random()*2500),
+    avgDailyHours:Math.floor(6+Math.random()*6),
+    riskScore:Math.floor(25+Math.random()*65),
+    kycStatus:'verified', joinedAt:new Date().toISOString()
+  })), total:20};
+
+  if (path.includes('/policies')) return { success: true, data: Array.from({length:12},(_,i)=>({
+    id:`POL-${Math.random().toString(36).substr(2,8).toUpperCase()}`,
+    workerId:`WRK-${String(i+1).padStart(5,'0')}`, workerName:`Worker ${i+1}`,
+    city:['Mumbai','Delhi','Bengaluru'][i%3], coverageType:['basic','standard','premium'][i%3],
+    weeklyPremium:Math.floor(50+Math.random()*100), coverageAmount:Math.floor(3000+Math.random()*8000),
+    status:i<10?'active':'expired', endDate: new Date(Date.now()+7*86400000).toISOString()
+  })), total:12};
+
+  if (path.includes('/claims') && !path.includes('submit')) return { success: true, data: Array.from({length:15},(_,i)=>({
+    id:`CLM-${Math.random().toString(36).substr(2,6).toUpperCase()}`,
+    workerName:`Worker ${i+1}`, city:['Mumbai','Delhi','Bengaluru','Chennai'][i%4],
+    disruptionType:['extreme_heat','heavy_rain','flood','severe_pollution','curfew'][i%5],
+    claimAmount:Math.floor(300+Math.random()*1500), policyId:`POL-XXXX${i}`,
+    status:['approved','approved','approved','under_review','rejected'][i%5],
+    isAutoTriggered: i%3===0,
+    fraudCheck:{fraudScore:Math.floor(5+Math.random()*60),flags:[]},
+    createdAt:new Date(Date.now()-i*3600000*4).toISOString()
+  })), total:15};
+
+  if (path.includes('/payouts')) return { success: true, data: Array.from({length:10},(_,i)=>({
+    id:`PAY-${Math.random().toString(36).substr(2,8).toUpperCase()}`,
+    claimId:`CLM-${Math.random().toString(36).substr(2,6).toUpperCase()}`,
+    workerId:`WRK-${String(i+1).padStart(5,'0')}`, amount:Math.floor(400+Math.random()*1400),
+    method:['upi','bank_transfer'][i%2], status:'completed',
+    processedAt:new Date(Date.now()-i*3600000*2).toISOString(), reference:`TXN${Date.now()-i*1000}`
+  })), total:10};
+
+  if (path.includes('/disruptions/create') && method === 'POST') {
+    return { success: true, data: { id:`DIS-${String(Math.floor(9+Math.random()*90)).padStart(4,'0')}`, ...body, date: new Date(), triggered: true, claimsGenerated: 0 }};
+  }
+
+  return { success: false, message: 'Endpoint not mocked' };
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const res = await apiFetch('/analytics/dashboard');
+  if (!res.success) return;
+  const { summary, cityBreakdown, weeklyTrend, disruptionBreakdown, recentClaims } = res.data;
+  state.analytics = res.data;
+
+  $('stat-workers').textContent = summary.totalWorkers;
+  $('stat-policies').textContent = summary.activePolicies;
+  $('stat-claims').textContent = summary.totalClaims;
+  $('stat-payouts').textContent = fmt(summary.totalPayoutsProcessed);
+  $('stat-disruptions').textContent = summary.activeDisruptions;
+  $('stat-auto').textContent = summary.autoTriggeredClaims;
+  $('stat-fraud').textContent = summary.rejectedClaims;
+  $('stat-loss-ratio').textContent = summary.lossRatio + '%';
+  $('stat-approval-rate').textContent = `${summary.claimApprovalRate}% approval rate`;
+
+  setBadge($('disruption-badge'), summary.activeDisruptions);
+  setBadge($('claims-badge'), summary.pendingClaims);
+  if (summary.pendingClaims > 0) { $('claims-badge').style.display = ''; }
+
+  renderWeeklyTrendChart('weekly-trend-chart', weeklyTrend);
+  renderCityChart('city-chart', cityBreakdown);
+  renderDisruptionChart('disruption-chart', disruptionBreakdown);
+  renderRecentClaims(recentClaims);
+}
+
+function renderWeeklyTrendChart(containerId, data) {
+  const el = $(containerId);
+  if (!el || !data) return;
+  const max = Math.max(...data.map(d => d.claims || 0));
+  el.innerHTML = `
+    <div class="chart-bar-wrap">
+      ${data.map(d => `
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">${d.date}</div>
+          <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${max>0?Math.round(((d.claims||0)/max)*100):0}%"></div></div>
+          <div class="chart-bar-val">${d.claims||0} claims</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderCityChart(containerId, data) {
+  const el = $(containerId);
+  if (!el || !data) return;
+  const entries = Object.entries(data);
+  const max = Math.max(...entries.map(([,v]) => v.workers || 0));
+  el.innerHTML = `
+    <div class="chart-bar-wrap">
+      ${entries.map(([city, v]) => `
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">${city}</div>
+          <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${max>0?Math.round((v.workers/max)*100):0}%"></div></div>
+          <div class="chart-bar-val">${v.workers} workers</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderDisruptionChart(containerId, data) {
+  const el = $(containerId);
+  if (!el || !data) return;
+  const entries = Object.entries(data).sort((a,b) => b[1].count - a[1].count);
+  const max = Math.max(...entries.map(([,v]) => v.count));
+  el.innerHTML = `
+    <div class="chart-bar-wrap">
+      ${entries.map(([type, v]) => `
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">${disruptionEmoji(type)} ${type.replace('_',' ')}</div>
+          <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${max>0?Math.round((v.count/max)*100):0}%"></div></div>
+          <div class="chart-bar-val">${v.count}</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderRecentClaims(claims) {
+  const el = $('recent-claims-list');
+  if (!el || !claims) return;
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Worker</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          ${claims.map(c => `
+            <tr>
+              <td>${c.workerName}</td>
+              <td>${disruptionEmoji(c.disruptionType)} ${c.disruptionType.replace('_',' ')}</td>
+              <td style="color:var(--accent);font-weight:600">₹${c.claimAmount}</td>
+              <td>${getStatusBadge(c.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Onboarding ────────────────────────────────────────────────────────────────
+function obShowStep(n) {
+  [1,2,3,4].forEach(i => {
+    $(`onboard-step-${i}`).style.display = i===n ? 'block' : 'none';
+    const step = $(`step-${i}`);
+    if (!step) return;
+    step.classList.remove('active','done');
+    if (i === n) step.classList.add('active');
+    else if (i < n) step.classList.add('done');
+    const line = $(`line-${i}`);
+    if (line) { line.classList.remove('done'); if(i < n) line.classList.add('done'); }
+  });
+}
+
+async function obNext(step) {
+  if (step === 1) {
+    if (!$('ob-name').value || !$('ob-phone').value || !$('ob-city').value) {
+      toast('Missing Info', 'Please fill all required fields', 'error');
+      return;
+    }
+    obShowStep(2);
+  } else if (step === 2) {
+    if (!$('ob-platform').value) { toast('Select Platform', 'Please choose your delivery platform', 'error'); return; }
+    const btn = $('ob-assess-btn');
+    btn.textContent = '🤖 Assessing...'; btn.disabled = true;
+
+    // Register worker
+    const regRes = await apiFetch('/workers/register', 'POST', {
+      name: $('ob-name').value, phone: $('ob-phone').value, city: $('ob-city').value,
+      platform: $('ob-platform').value, segment: $('ob-segment').value,
+      avgWeeklyEarning: parseInt($('ob-earning').value)||2500,
+      avgDailyHours: parseInt($('ob-hours').value)||8,
+      bankAccount: $('ob-bank').value
+    });
+
+    if (regRes.success) {
+      state.onboard.workerId = regRes.data.id;
+      // Assess risk
+      const riskRes = await apiFetch('/risk/assess', 'POST', { workerId: regRes.data.id, ...regRes.data });
+      if (riskRes.success) state.onboard.riskData = riskRes.data;
+    }
+
+    btn.textContent = 'Assess Risk & Continue →'; btn.disabled = false;
+    obShowStep(3);
+    renderPlanCards();
+  } else if (step === 3) {
+    if (!state.onboard.selectedPlan) { toast('Select Plan', 'Please choose a coverage plan', 'error'); return; }
+    // Create policy
+    const pRes = await apiFetch('/policies/create', 'POST', {
+      workerId: state.onboard.workerId,
+      coverageType: state.onboard.selectedPlan,
+      paymentMethod: 'upi'
+    });
+    if (pRes.success) {
+      state.onboard.policy = pRes.data;
+      obShowStep(4);
+      renderPolicySummary(pRes.data);
+      toast('🎉 Policy Activated!', `Policy ${pRes.data.id} is now active`, 'success');
+    } else {
+      toast('Error', 'Failed to create policy', 'error');
+    }
+  }
+}
+
+function obBack(step) { obShowStep(step - 1); }
+
+function renderPlanCards() {
+  const d = state.onboard.riskData;
+  const riskScore = d?.riskScore || 55;
+  const riskCat = d?.riskCategory || 'MEDIUM';
+  const premiums = d?.weeklyPremiums || { basic:45, standard:72, premium:105 };
+  const coverages = d?.coverageAmounts || { basic:3000, standard:5000, premium:8000 };
+
+  // Risk meter
+  const rpResult = $('ob-risk-result');
+  if (rpResult) rpResult.innerHTML = `
+    <div style="display:flex;gap:20px;align-items:center;margin-bottom:12px">
+      <div>
+        <div style="font-size:36px;font-weight:800;font-family:var(--font-head);color:${riskCat==='HIGH'?'var(--danger)':riskCat==='MEDIUM'?'var(--warning)':'var(--accent)'}">${riskScore}</div>
+        <div style="font-size:11px;color:var(--text-muted)">Risk Score / 100</div>
+      </div>
+      <div style="flex:1">
+        <div class="risk-meter"><div class="risk-fill ${getRiskClass(riskScore)}" style="width:${riskScore}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px"><span>Low</span><span>Medium</span><span>High</span></div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted)">📍 ${$('ob-city').value} · ${$('ob-platform').value} · ${$('ob-segment').value} delivery</div>`;
+  $('ob-risk-badge').innerHTML = `<span class="badge ${riskCat==='HIGH'?'badge-red':riskCat==='MEDIUM'?'badge-yellow':'badge-green'}">${riskCat} RISK</span>`;
+
+  $('plan-cards').innerHTML = ['basic','standard','premium'].map(plan => `
+    <div class="plan-card ${plan==='standard'?'selected':''}" id="plan-${plan}" onclick="selectPlan('${plan}')">
+      ${plan==='standard'?'<div class="plan-popular-badge">POPULAR</div>':''}
+      <div class="plan-name">${plan.toUpperCase()}</div>
+      <div class="plan-price">₹${premiums[plan]}<span>/week</span></div>
+      <div class="plan-coverage">Coverage up to ₹${coverages[plan].toLocaleString()}</div>
+      <ul class="plan-features">
+        <li>Income loss protection</li>
+        <li>${plan==='basic'?'5':'plan'==='standard'?'8':'All'} disruption types</li>
+        <li>UPI instant payout</li>
+        ${plan!=='basic'?'<li>Priority claim processing</li>':''}
+        ${plan==='premium'?'<li>4x weekly earning coverage</li>':''}
+      </ul>
+    </div>`).join('');
+
+  state.onboard.selectedPlan = 'standard';
+}
+
+function selectPlan(plan) {
+  state.onboard.selectedPlan = plan;
+  ['basic','standard','premium'].forEach(p => {
+    const el = $(`plan-${p}`);
+    if (el) { el.classList.remove('selected'); if(p===plan) el.classList.add('selected'); }
+  });
+}
+
+function renderPolicySummary(policy) {
+  const el = $('policy-summary');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div style="font-size:11px;color:var(--text-muted)">POLICY ID</div><div style="font-weight:700;color:var(--accent)">${policy.id}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">PLAN</div><div style="font-weight:700">${policy.coverageType?.toUpperCase()}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">WEEKLY PREMIUM</div><div style="font-weight:700;color:var(--accent)">₹${policy.weeklyPremium}/week</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">COVERAGE</div><div style="font-weight:700">₹${policy.coverageAmount?.toLocaleString()}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">VALID UNTIL</div><div style="font-weight:700">${new Date(policy.endDate).toLocaleDateString('en-IN')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">STATUS</div>${getStatusBadge('active')}</div>
+    </div>`;
+}
+
+// ── Risk Assessment ───────────────────────────────────────────────────────────
+const weatherData = {
+  Mumbai: { temp:32, humidity:85, rainfall:45, aqi:120, condition:'Partly Cloudy' },
+  Delhi: { temp:43, humidity:25, rainfall:0, aqi:385, condition:'Severe Haze' },
+  Bengaluru: { temp:28, humidity:70, rainfall:20, aqi:110, condition:'Cloudy' },
+  Chennai: { temp:36, humidity:78, rainfall:80, aqi:95, condition:'Heavy Rain' },
+  Hyderabad: { temp:38, humidity:55, rainfall:10, aqi:145, condition:'Sunny' },
+  Pune: { temp:30, humidity:65, rainfall:30, aqi:130, condition:'Overcast' },
+  Kolkata: { temp:34, humidity:82, rainfall:60, aqi:160, condition:'Rainy' }
+};
+
+function rpUpdateWeather() {
+  const city = $('rp-city')?.value || 'Delhi';
+  const w = weatherData[city] || weatherData.Delhi;
+  const weatherEl = $('rp-weather');
+  if (!weatherEl) return;
+  weatherEl.querySelector('.weather-icon').textContent = weatherIcon(w.condition);
+  weatherEl.querySelector('.weather-temp').textContent = `${w.temp}°C`;
+  weatherEl.querySelector('.weather-meta').textContent = w.condition;
+  $('rp-aqi').textContent = w.aqi;
+  $('rp-humidity').textContent = w.humidity;
+  $('rp-rain').textContent = w.rainfall;
+}
+
+async function runRiskAssessment() {
+  const btn = $('rp-btn');
+  btn.textContent = '🤖 Analyzing...'; btn.disabled = true;
+
+  const city = $('rp-city').value;
+  const segment = $('rp-segment').value;
+  const earning = parseInt($('rp-earning').value) || 2500;
+  const hours = parseInt($('rp-hours').value) || 8;
+
+  const res = await apiFetch('/premium/calculate', 'POST', { city, segment, avgWeeklyEarning: earning, avgDailyHours: hours });
+
+  btn.textContent = '🤖 Run AI Assessment'; btn.disabled = false;
+
+  if (!res.success) { toast('Error', 'Assessment failed', 'error'); return; }
+
+  const { riskScore, riskCategory, premiums, coverages, weather } = res.data;
+
+  $('rp-result-card').innerHTML = `
+    <div class="card-header">
+      <div>
+        <div class="card-title">🧠 Risk Assessment Result</div>
+        <div class="card-subtitle">${city} · ${segment} delivery · ₹${earning}/week</div>
+      </div>
+      <span class="badge ${riskCategory==='HIGH'?'badge-red':riskCategory==='MEDIUM'?'badge-yellow':'badge-green'}">${riskCategory} RISK</span>
+    </div>
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:56px;font-weight:800;font-family:var(--font-head);color:${riskCategory==='HIGH'?'var(--danger)':riskCategory==='MEDIUM'?'var(--warning)':'var(--accent)'}">${riskScore}</div>
+      <div style="font-size:12px;color:var(--text-muted)">out of 100</div>
+      <div style="margin:12px auto;max-width:200px">
+        <div class="risk-meter"><div class="risk-fill ${getRiskClass(riskScore)}" style="width:${riskScore}%"></div></div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-muted)">PLAN OPTIONS</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${['basic','standard','premium'].map(plan=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid ${plan==='standard'?'var(--accent)':'var(--border)'}">
+          <div>
+            <div style="font-weight:700;font-size:13px">${plan.toUpperCase()} ${plan==='standard'?'<span style="color:var(--accent);font-size:10px">★ RECOMMENDED</span>':''}</div>
+            <div style="font-size:11px;color:var(--text-muted)">Coverage: ₹${coverages[plan]?.toLocaleString()}</div>
+          </div>
+          <div style="font-family:var(--font-head);font-weight:800;font-size:18px;color:var(--accent)">₹${premiums[plan]}<span style="font-size:11px;color:var(--text-muted)">/week</span></div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:14px;padding:12px;background:var(--accent-dim);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--text-muted)">
+      ⚡ Risk factors: City weather exposure (${city}), segment outdoor time, historical disruption frequency
+    </div>`;
+}
+
+// ── Disruptions ───────────────────────────────────────────────────────────────
+let allDisruptions = [];
+async function loadDisruptions() {
+  const res = await apiFetch('/disruptions');
+  if (!res.success) return;
+  allDisruptions = res.data;
+  state.disruptions = res.data;
+  renderDisruptionGrid(allDisruptions);
+  // Populate claim form dropdown
+  const sel = $('claim-disruption-id');
+  if (sel) {
+    sel.innerHTML = '<option value="">Select disruption event</option>' +
+      allDisruptions.map(d => `<option value="${d.id}">${disruptionEmoji(d.type)} ${d.id} — ${d.city} — ${d.description}</option>`).join('');
+  }
+  // Auto-trigger dropdown
+  const atSel = $('auto-trigger-disruption');
+  if (atSel) {
+    atSel.innerHTML = allDisruptions.map(d => `<option value="${d.id}">${disruptionEmoji(d.type)} ${d.id} — ${d.city} — ${d.severity}</option>`).join('');
+  }
+}
+
+function filterDisruptions(severity, el) {
+  document.querySelectorAll('#sec-disruptions .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const filtered = severity === 'all' ? allDisruptions : allDisruptions.filter(d => d.severity === severity);
+  renderDisruptionGrid(filtered);
+}
+
+function renderDisruptionGrid(data) {
+  const el = $('disruptions-grid');
+  if (!el) return;
+  if (!data || !data.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No disruptions active</div></div>'; return; }
+
+  el.innerHTML = data.map(d => {
+    const age = Math.round((Date.now() - new Date(d.date).getTime()) / 3600000);
+    return `
+    <div class="disruption-card ${d.severity}">
+      <div class="disruption-type">${disruptionEmoji(d.type)} ${d.type.replace(/_/g,' ')}</div>
+      <div class="disruption-desc">${d.description}</div>
+      <div class="disruption-meta">
+        <span class="badge ${d.severity==='CRITICAL'?'badge-red':d.severity==='HIGH'?'badge-yellow':'badge-blue'}">${d.severity}</span>
+        <span class="badge badge-muted">📍 ${d.city}</span>
+        <span class="badge badge-muted">${age < 24 ? `${age}h ago` : `${Math.round(age/24)}d ago`}</span>
+        ${d.claimsGenerated ? `<span class="badge badge-green">📋 ${d.claimsGenerated} claims</span>` : ''}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="runAutoTriggerForDis('${d.id}')">⚡ Auto-Trigger</button>
+        <span style="font-size:11px;color:var(--text-dim);align-self:center">${d.id}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addDisruption() {
+  const res = await apiFetch('/disruptions/create', 'POST', {
+    type: $('new-dis-type').value,
+    description: $('new-dis-desc').value || 'Event reported',
+    severity: $('new-dis-severity').value,
+    city: $('new-dis-city').value
+  });
+  if (res.success) {
+    toast('Disruption Logged', `${res.data.id} activated in ${res.data.city}`, 'success');
+    closeModal('add-disruption-modal');
+    allDisruptions.unshift(res.data);
+    renderDisruptionGrid(allDisruptions);
+  }
+}
+
+async function runAutoTrigger() {
+  const disruptionId = $('auto-trigger-disruption').value;
+  if (!disruptionId) { toast('Select Event', 'Please choose a disruption event', 'error'); return; }
+  await runAutoTriggerForDis(disruptionId);
+}
+
+async function runAutoTriggerForDis(disruptionId) {
+  const btn = $('auto-trigger-btn');
+  if (btn) { btn.textContent = '⚡ Triggering...'; btn.disabled = true; }
+
+  const res = await apiFetch('/claims/auto-trigger', 'POST', { disruptionId });
+
+  if (btn) { btn.textContent = '⚡ Auto-Trigger Claims'; btn.disabled = false; }
+
+  if (res.success) {
+    const { affectedWorkers, claimsTriggered } = res.data;
+    const resultEl = $('auto-trigger-result');
+    if (resultEl) {
+      resultEl.innerHTML = `
+        <div class="alert-bar alert-success" style="margin-top:14px">
+          ✅ Auto-triggered <strong>${claimsTriggered} parametric claims</strong> for ${affectedWorkers} affected workers. 
+          UPI payouts processing in real-time.
+        </div>`;
+    }
+    toast('Auto-Trigger Complete', `${claimsTriggered} claims triggered for ${disruptionId}`, 'success');
+  }
+}
+
+function showCityDetails(city) {
+  const w = weatherData[city] || {};
+  const disruptions = allDisruptions.filter(d => d.city === city);
+  const panel = $('city-detail-panel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="card" style="background:var(--surface2)">
+      <div class="card-header">
+        <div class="card-title">📍 ${city} — Current Status</div>
+        <button class="btn btn-ghost btn-sm" onclick="$('city-detail-panel').style.display='none'">✕</button>
+      </div>
+      <div class="grid-2" style="gap:14px">
+        <div class="weather-widget">
+          <div class="weather-icon">${weatherIcon(w.condition)}</div>
+          <div>
+            <div class="weather-temp">${w.temp||'—'}°C</div>
+            <div class="weather-meta">${w.condition||'—'}</div>
+          </div>
+          <div style="margin-left:auto;font-size:12px;color:var(--text-muted)">
+            AQI: <b style="color:${w.aqi>300?'var(--danger)':w.aqi>150?'var(--warning)':'var(--accent)'}">${w.aqi||'—'}</b><br>
+            Rain: ${w.rainfall||0}mm
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">ACTIVE DISRUPTIONS</div>
+          ${disruptions.length ? disruptions.map(d=>`<div class="badge ${d.severity==='CRITICAL'?'badge-red':'badge-yellow'}" style="margin:3px">${disruptionEmoji(d.type)} ${d.type.replace(/_/g,' ')}</div>`).join('') : '<div style="font-size:12px;color:var(--text-muted)">No active disruptions</div>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Claims ────────────────────────────────────────────────────────────────────
+async function submitClaim() {
+  const workerId = $('claim-worker-id').value;
+  const policyId = $('claim-policy-id').value;
+  const disruptionId = $('claim-disruption-id').value;
+  const hoursLost = parseInt($('claim-hours').value);
+  const description = $('claim-desc').value;
+
+  if (!workerId || !policyId || !disruptionId || !hoursLost) {
+    toast('Missing Fields', 'Please fill all required fields', 'error');
+    return;
+  }
+
+  const btn = $('claim-submit-btn');
+  btn.textContent = '⏳ Processing...'; btn.disabled = true;
+
+  const res = await apiFetch('/claims/submit', 'POST', { workerId, policyId, disruptionId, hoursLost, description });
+
+  btn.textContent = 'Submit Claim → Auto Review'; btn.disabled = false;
+
+  const el = $('claim-result');
+  if (res.success) {
+    const c = res.data;
+    const isApproved = c.status === 'approved';
+    el.innerHTML = `
+      <div class="fraud-result ${c.fraudCheck?.fraudScore > 60 ? 'fraud' : c.fraudCheck?.fraudScore > 30 ? 'risky' : 'safe'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">${isApproved ? '✅ Claim Approved!' : c.status==='under_review' ? '🔍 Under Review' : '❌ Claim Rejected'}</div>
+          <span class="badge ${isApproved?'badge-green':c.status==='under_review'?'badge-yellow':'badge-red'}">${c.status.replace('_',' ').toUpperCase()}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted)">Claim ID: <b>${c.id}</b></div>
+        ${isApproved ? `<div style="font-size:20px;font-weight:800;color:var(--accent);margin:10px 0">₹${c.claimAmount?.toLocaleString()} → UPI Payout</div>` : ''}
+        <div style="font-size:12px;color:var(--text-muted)">Fraud Score: ${c.fraudCheck?.fraudScore}/100 · ${res.message}</div>
+      </div>`;
+    toast(isApproved ? '💸 Payout Processing!' : 'Claim Submitted', res.message, isApproved ? 'success' : 'warning');
+  } else {
+    el.innerHTML = `<div class="alert-bar alert-danger">❌ ${res.message}</div>`;
+    toast('Error', res.message, 'error');
+  }
+}
+
+// ── Claims Table ──────────────────────────────────────────────────────────────
+let allClaims = [];
+async function loadClaimsTable(filter) {
+  if (!allClaims.length) {
+    const res = await apiFetch('/claims');
+    if (res.success) { allClaims = res.data; state.claims = res.data; }
+  }
+  renderClaimsTable(filter);
+}
+
+function filterClaims(filter, el) {
+  document.querySelectorAll('#sec-claims-tracker .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderClaimsTable(filter);
+}
+
+function renderClaimsTable(filter) {
+  const search = $('claims-search')?.value.toLowerCase() || '';
+  let data = allClaims;
+  if (filter && filter !== 'all' && filter !== 'search') data = data.filter(c => c.status === filter);
+  if (search) data = data.filter(c => c.workerId?.toLowerCase().includes(search) || c.workerName?.toLowerCase().includes(search) || c.id?.toLowerCase().includes(search));
+
+  const tbody = $('claims-table-body');
+  if (!tbody) return;
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted)">No claims found</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--accent)">${c.id}</td>
+      <td>${c.workerName}<br><span style="font-size:11px;color:var(--text-muted)">${c.workerId||''}</span></td>
+      <td><span class="badge badge-muted">📍 ${c.city}</span></td>
+      <td>${disruptionEmoji(c.disruptionType)} ${c.disruptionType?.replace(/_/g,' ')}</td>
+      <td style="color:var(--accent);font-weight:700">₹${c.claimAmount?.toLocaleString()}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="risk-meter" style="width:60px;height:6px"><div class="risk-fill ${getRiskClass(100-(c.fraudCheck?.fraudScore||0))}" style="width:${100-(c.fraudCheck?.fraudScore||0)}%"></div></div>
+          <span style="font-size:11px;color:var(--text-muted)">${c.fraudCheck?.fraudScore||0}/100</span>
+        </div>
+      </td>
+      <td>${getStatusBadge(c.status)} ${c.isAutoTriggered ? '<span class="badge badge-blue" style="margin-left:4px">AUTO</span>' : ''}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${new Date(c.createdAt).toLocaleDateString('en-IN')}</td>
+    </tr>`).join('');
+}
+
+// ── Payouts ───────────────────────────────────────────────────────────────────
+async function loadPayouts() {
+  const res = await apiFetch('/payouts');
+  if (!res.success) return;
+  const payouts = res.data;
+  state.payouts = payouts;
+
+  const total = payouts.reduce((s, p) => s + (p.amount || 0), 0);
+  const avg = payouts.length ? Math.round(total / payouts.length) : 0;
+  $('payout-total-count').textContent = payouts.length;
+  $('payout-total-amount').textContent = fmt(total);
+  $('payout-avg').textContent = fmt(avg);
+
+  const tbody = $('payouts-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = payouts.map(p => `
+    <tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--accent)">${p.id}</td>
+      <td style="font-family:monospace;font-size:11px">${p.claimId}</td>
+      <td>${p.workerId}</td>
+      <td style="color:var(--accent);font-weight:700">₹${p.amount?.toLocaleString()}</td>
+      <td><span class="badge badge-muted">${p.method?.replace('_',' ').toUpperCase()}</span></td>
+      <td>${getStatusBadge(p.status)}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${new Date(p.processedAt).toLocaleString('en-IN')}</td>
+    </tr>`).join('');
+}
+
+// ── Policies ──────────────────────────────────────────────────────────────────
+async function loadPolicies() {
+  const res = await apiFetch('/policies');
+  if (!res.success) return;
+  const tbody = $('policies-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = res.data.map(p => `
+    <tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--accent)">${p.id}</td>
+      <td>${p.workerName}<br><span style="font-size:11px;color:var(--text-muted)">${p.workerId}</span></td>
+      <td><span class="badge badge-muted">📍 ${p.city||'—'}</span></td>
+      <td style="text-transform:capitalize">${p.coverageType}</td>
+      <td style="color:var(--accent);font-weight:700">₹${p.weeklyPremium}/wk</td>
+      <td>₹${p.coverageAmount?.toLocaleString()}</td>
+      <td style="font-size:12px">${new Date(p.endDate).toLocaleDateString('en-IN')}</td>
+      <td>${getStatusBadge(p.status)}</td>
+    </tr>`).join('');
+}
+
+// ── Fraud ─────────────────────────────────────────────────────────────────────
+async function loadFraudSection() {
+  if (!allClaims.length) { const r = await apiFetch('/claims'); if(r.success) allClaims = r.data; }
+  const flagged = allClaims.filter(c => (c.fraudCheck?.fraudScore || 0) > 40);
+  const totalSaved = flagged.reduce((s,c) => s + (c.claimAmount||0), 0);
+  $('fraud-flagged').textContent = flagged.length;
+  $('fraud-saved').textContent = fmt(totalSaved);
+
+  const el = $('fraud-claims-list');
+  if (!el) return;
+  if (!flagged.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No fraud detected</div></div>'; return; }
+  el.innerHTML = flagged.map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:8px;border-left:3px solid ${c.status==='rejected'?'var(--danger)':'var(--warning)'}">
+      <div>
+        <div style="font-weight:600;font-size:13px">${c.id}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${c.workerName} · ₹${c.claimAmount}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;color:${c.fraudCheck?.fraudScore > 60?'var(--danger)':'var(--warning)'}">Score: ${c.fraudCheck?.fraudScore}</div>
+        ${getStatusBadge(c.status)}
+      </div>
+    </div>`).join('');
+}
+
+async function analyzeClaimFraud() {
+  const claimId = $('fraud-claim-id').value.trim();
+  if (!claimId) { toast('Enter Claim ID', 'Please enter a claim ID to analyze', 'error'); return; }
+
+  // Find in loaded claims
+  if (!allClaims.length) { const r = await apiFetch('/claims'); if(r.success) allClaims = r.data; }
+  const claim = allClaims.find(c => c.id.toLowerCase() === claimId.toLowerCase());
+
+  const el = $('fraud-analysis-result');
+  if (!claim) { el.innerHTML = `<div class="alert-bar alert-danger">Claim ${claimId} not found in database</div>`; return; }
+
+  const fs = claim.fraudCheck?.fraudScore || 0;
+  const level = fs > 60 ? 'fraud' : fs > 30 ? 'risky' : 'safe';
+  const color = fs > 60 ? 'var(--danger)' : fs > 30 ? 'var(--warning)' : 'var(--accent)';
+
+  el.innerHTML = `
+    <div class="fraud-result ${level}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-weight:700;font-size:15px">Fraud Analysis: ${claimId}</div>
+        <div style="font-size:28px;font-weight:800;color:${color}">${fs}/100</div>
+      </div>
+      <div class="risk-meter" style="margin-bottom:12px"><div class="risk-fill ${level}" style="width:${fs}%"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div>Worker: <b>${claim.workerName}</b></div>
+        <div>City: <b>${claim.city}</b></div>
+        <div>Amount: <b style="color:var(--accent)">₹${claim.claimAmount}</b></div>
+        <div>Status: ${getStatusBadge(claim.status)}</div>
+      </div>
+      ${claim.fraudCheck?.flags?.length ? `
+        <div style="margin-top:10px;font-size:12px;color:${color};font-weight:600">
+          ⚠️ Flags: ${claim.fraudCheck.flags.join(', ')}
+        </div>` : '<div style="margin-top:10px;font-size:12px;color:var(--accent)">✅ No fraud signals detected</div>'}
+      <div style="margin-top:10px">
+        <span class="badge ${level==='fraud'?'badge-red':level==='risky'?'badge-yellow':'badge-green'}">
+          Recommendation: ${claim.fraudCheck?.recommendation || 'APPROVE'}
+        </span>
+      </div>
+    </div>`;
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const res = state.analytics || (await apiFetch('/analytics/dashboard')).data;
+  if (!res) return;
+  state.analytics = res;
+  const { summary, weeklyTrend, cityBreakdown, platformDistribution, riskDistribution, disruptionBreakdown } = res;
+
+  $('an-approval').textContent = summary.claimApprovalRate + '%';
+  $('an-loss').textContent = summary.lossRatio + '%';
+  $('an-premium').textContent = fmt(summary.totalPremiumsCollected);
+  $('an-payout').textContent = fmt(summary.totalPayoutsProcessed);
+
+  renderWeeklyTrendChart('analytics-weekly-chart', weeklyTrend);
+  renderCityChart('analytics-city-chart', cityBreakdown);
+
+  // Platform chart
+  const platEl = $('analytics-platform-chart');
+  if (platEl) {
+    const entries = Object.entries(platformDistribution).sort((a,b)=>b[1]-a[1]);
+    const max = Math.max(...entries.map(([,v])=>v));
+    platEl.innerHTML = `<div class="chart-bar-wrap">${entries.map(([p,v])=>`
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">${p}</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((v/max)*100)}%"></div></div>
+        <div class="chart-bar-val">${v}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  // Risk chart
+  const riskEl = $('analytics-risk-chart');
+  if (riskEl) {
+    const total = (riskDistribution.LOW||0)+(riskDistribution.MEDIUM||0)+(riskDistribution.HIGH||0);
+    riskEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${[['LOW','var(--accent)'],[' MEDIUM','var(--warning)'],['HIGH','var(--danger)']].map(([label,color])=>{
+          const val = riskDistribution[label.trim()]||0;
+          return `<div class="chart-bar-row">
+            <div class="chart-bar-label" style="color:${color}">${label.trim()}</div>
+            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${total?Math.round((val/total)*100):0}%;background:${color}"></div></div>
+            <div class="chart-bar-val">${val} workers</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  renderDisruptionChart('analytics-disruption-chart', disruptionBreakdown);
+}
+
+// ── Workers ───────────────────────────────────────────────────────────────────
+async function loadWorkers() {
+  const city = $('workers-city-filter')?.value || '';
+  const platform = $('workers-platform-filter')?.value || '';
+  const segment = $('workers-segment-filter')?.value || '';
+  const params = new URLSearchParams();
+  if (city) params.set('city', city);
+  if (platform) params.set('platform', platform);
+  if (segment) params.set('segment', segment);
+
+  const res = await apiFetch(`/workers?${params}`);
+  if (!res.success) return;
+  const workers = res.data;
+  const countEl = $('workers-count');
+  if (countEl) countEl.textContent = `${res.total || workers.length} workers`;
+
+  const tbody = $('workers-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = workers.map(w => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--accent)">${w.id}</td>
+      <td style="font-weight:600">${w.name}</td>
+      <td><span class="badge badge-muted">📍 ${w.city}</span></td>
+      <td>${w.platform}</td>
+      <td style="text-transform:capitalize">${w.segment}</td>
+      <td style="color:var(--accent);font-weight:600">₹${w.avgWeeklyEarning?.toLocaleString()}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="risk-meter" style="width:50px;height:5px"><div class="risk-fill ${getRiskClass(w.riskScore||50)}" style="width:${w.riskScore||50}%"></div></div>
+          <span style="font-size:11px;color:var(--text-muted)">${w.riskScore||'—'}</span>
+        </div>
+      </td>
+      <td>${getStatusBadge(w.kycStatus==='verified'?'active':'pending')}</td>
+    </tr>`).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Set date
+  $('current-date').textContent = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+
+  // Load disruptions to populate dropdowns
+  await loadDisruptions();
+  // Load dashboard
+  await loadDashboard();
+
+  // Init weather widget on risk page
+  rpUpdateWeather();
+
+  // Responsive sidebar toggle
+  if (window.innerWidth < 768) {
+    $('menu-btn').style.display = 'flex';
+  }
+
+  // Simulate live updates
+  setInterval(async () => {
+    if (state.currentSection === 'dashboard') {
+      await loadDashboard();
+    }
+  }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
