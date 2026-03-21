@@ -46,7 +46,6 @@ Open `frontend/index.html` in your browser. It will automatically connect to the
 |---|---|
 | **Worker Onboarding** | 4-step guided signup with city, platform, segment, and earnings |
 | **AI Risk Profiling** | Dynamic risk score (0-100) based on city, segment, weather, hours |
-| **Weekly Pricing** | Premium calculated as % of weekly earnings — city & segment adjusted |
 | **Parametric Automation** | Auto-trigger claims for ALL workers in a disruption zone |
 | **Fraud Detection** | Multi-signal anomaly detection with fraud score & flags |
 | **Instant Payouts** | < 30 second UPI/bank transfer on approval |
@@ -64,14 +63,6 @@ Open `frontend/index.html` in your browser. It will automatically connect to the
 | Severe Pollution | AQI > 300 | 65% |
 | Platform App Outage | > 4 hours | 50% |
 
-### Weekly Plans
-| Plan | Premium | Coverage |
-|---|---|---|
-| Basic | ~1.5% of weekly earnings | 1.5x weekly earning |
-| Standard | ~2.2% of weekly earnings | 2.5x weekly earning |
-| Premium | ~3.2% of weekly earnings | 4.0x weekly earning |
-
----
 
 ## 📡 API Endpoints
 
